@@ -5,6 +5,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Page</title>
+    //add validations to the form
+    <script>
+        function validateForm() {
+            const username = document.querySelector('input[type="text"]').value;
+            const password = document.querySelector('input[type="password"]').value;
+
+            if (username.trim() === '') {
+                alert('Please enter your username.');
+                return false;
+            }
+            if (password.trim() === '') {
+                alert('Please enter your password.');
+                return false;
+            }
+            return true;
+        }
+    </script>
     <style>
         body {
             font-family: Arial, sans-serif;
