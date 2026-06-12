@@ -1,54 +1,74 @@
 // ================= REGISTER USER =================
-function registerUser(event) {
+async function registerUser(event) {
     event.preventDefault();
 
-    let name = document.getElementById("name").value;
+    let uname = document.getElementById("name").value;
     let email = document.getElementById("email").value;
-    let password = document.getElementById("password").value;
-    let confirmPassword = document.getElementById("confirm_password").value;
+    let pwd = document.getElementById("password").value;
+    let cpwd = document.getElementById("confirm_password").value;
 
     // Password validation
-    if (password !== confirmPassword) {
+    if (pwd !== cpwd) {
         alert("Password and Confirm Password do not match");
-        return false;
+        return;
     }
 
-    let users = JSON.parse(localStorage.getItem("users")) || [];
+    try {
 
-    // Check existing user
-    let existingUser = users.find(user => user.email === email);
+        // Fetch existing users
+        const response = await fetch("http://localhost:3000/users");
+        const users = await response.json();
 
-    if (existingUser) {
-        alert("User already exists");
-        return false;
+        // Check if user already exists
+        let existingUser = users.find(user => user.email === email);
+
+        if (existingUser) {
+            alert("User already exists");
+            return;
+        }
+
+        // Create new user object
+        const user = {
+            name: uname,
+            email: email,
+            password: pwd
+        };
+
+        // Add user to db.json
+        const result = await fetch("http://localhost:3000/users", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(user)
+        });
+
+        if (result.ok) {
+            alert("Registration Successful");
+
+            // Redirect to login page
+            window.location.href = "login.html";
+        } else {
+            alert("Failed to register user");
+        }
+
+    } catch (error) {
+        console.log(error);
+        alert("Something went wrong");
     }
-
-    // Save user
-    let user = {
-        name,
-        email,
-        password
-    };
-
-    users.push(user);
-
-    localStorage.setItem("users", JSON.stringify(users));
-
-    alert("Registration Successful");
-
-    // Redirect to login page
-    window.location.href = "login.html";
 }
 
 
 // ================= LOGIN USER =================
-function loginUser(event) {
+async function loginUser(event) {
     event.preventDefault();
 
     let email = document.getElementById("email").value;
     let password = document.getElementById("password").value;
 
-    let users = JSON.parse(localStorage.getItem("users")) || [];
+    try {
+        const response = await fetch("http://localhost:3000/users");
+        const users = await response.json();
 
     let validUser = users.find(
         user => user.email === email && user.password === password
@@ -56,22 +76,21 @@ function loginUser(event) {
 
     if (validUser) {
 
-        // Save logged in user
         localStorage.setItem("loggedInUser", JSON.stringify(validUser));
 
         alert("Login Successful");
-
-        // Redirect to dashboard
         window.location.href = "dashboard.html";
-
     } else {
-        alert("Invalid Email or Password");
+        alert("Invalid email or password");
+    }
+    } catch (error) {
+        console.log(error);
+        alert("Something went wrong");
     }
 }
 
-
 // ================= LOGOUT =================
-function logoutUser() {
+async function logoutUser() {
 
     localStorage.removeItem("loggedInUser");
 
@@ -82,7 +101,8 @@ function logoutUser() {
 
 
 // ================= ADD STUDENT =================
-function addStudent(event) {
+async function addStudent(event) {
+
     event.preventDefault();
 
     let name = document.getElementById("name").value;
@@ -90,82 +110,91 @@ function addStudent(event) {
     let email = document.getElementById("email").value;
     let cgpa = document.getElementById("cgpa").value;
 
-    let students = JSON.parse(localStorage.getItem("students")) || [];
+    try {
 
-    let student = {
-        name,
-        age,
-        email,
-        cgpa
-    };
+        const result = await fetch("http://localhost:3000/students", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name,
+                age,
+                email,
+                cgpa
+            })
+        });
 
-    students.push(student);
+        if(result.ok){
 
-    localStorage.setItem("students", JSON.stringify(students));
+            window.location.href = "view.html";
 
-    alert("Student Added Successfully");
+        }
 
-    // Redirect to view page
-    window.location.href = "view.html";
+    } catch(error) {
+
+        console.log(error);
+
+    }
 }
 
-
 // ================= DISPLAY STUDENTS =================
-function loadStudents() {
 
-    let students = JSON.parse(localStorage.getItem("students")) || [];
+async function loadStudents() {
 
-    let tableBody = document.getElementById("studentTableBody");
+    const tableBody = document.getElementById("studentTableBody");
 
-    if (!tableBody) {
-        return;
-    }
+    const response = await fetch("http://localhost:3000/students");
+
+    const students = await response.json();
 
     tableBody.innerHTML = "";
 
-    students.forEach((student, index) => {
+    students.forEach((student) => {
 
         tableBody.innerHTML += `
             <tr>
+
                 <td>${student.name}</td>
                 <td>${student.age}</td>
                 <td>${student.email}</td>
                 <td>${student.cgpa}</td>
+
                 <td>
 
-    <button onclick="editStudent(${index})">
-        Edit
-    </button>
+                    <button onclick="editStudent('${student.id}')">
+                        Edit
+                    </button>
 
-    <button onclick="deleteStudent(${index})">
-        Delete
-    </button>
+                    <button onclick="deleteStudent('${student.id}')">
+                        Delete
+                    </button>
 
-</td>
+                </td>
+
             </tr>
         `;
     });
 }
 
 // ================= EDIT STUDENT =================
-function editStudent(index) {
+function editStudent(id) {
 
-    localStorage.setItem("editIndex", index);
+    localStorage.setItem("editStudentId", id);
 
-    window.location.href = "edit.html";
+    window.location.href = "./edit.html";
 }
 
-
 // ================= UPDATE STUDENT =================
-function updateStudent(event) {
+async function updateStudent(event) {
 
     event.preventDefault();
 
-    let index = localStorage.getItem("editIndex");
+    const id = localStorage.getItem("editStudentId");
 
-    let students = JSON.parse(localStorage.getItem("students")) || [];
+    const updatedStudent = {
 
-    students[index] = {
+        id: id,
 
         name: document.getElementById("name").value,
         age: document.getElementById("age").value,
@@ -173,21 +202,28 @@ function updateStudent(event) {
         cgpa: document.getElementById("cgpa").value
     };
 
-    localStorage.setItem("students", JSON.stringify(students));
+    await fetch(`http://localhost:3000/students/${id}`, {
 
-    alert("Student Updated Successfully");
+        method: "PUT",
 
-    window.location.href = "view.html";
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify(updatedStudent)
+    });
+
+    alert("Updated Successfully");
+
+    window.location.replace("view.html");
 }
 
 // ================= DELETE STUDENT =================
-function deleteStudent(index) {
+async function deleteStudent(id) {
 
-    let students = JSON.parse(localStorage.getItem("students")) || [];
-
-    students.splice(index, 1);
-
-    localStorage.setItem("students", JSON.stringify(students));
+    await fetch(`http://localhost:3000/students/${id}`, {
+        method: "DELETE"
+    });
 
     loadStudents();
 }
