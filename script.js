@@ -16,7 +16,7 @@ async function registerUser(event) {
     try {
 
         // Fetch existing users
-        const response = await fetch("http://localhost:3000/users");
+        const response = await fetch("http://localhost:8080/users");
         const users = await response.json();
 
         // Check if user already exists
@@ -35,7 +35,7 @@ async function registerUser(event) {
         };
 
         // Add user to db.json
-        const result = await fetch("http://localhost:3000/users", {
+        const result = await fetch("http://localhost:8080/users", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -67,7 +67,7 @@ async function loginUser(event) {
     let password = document.getElementById("password").value;
 
     try {
-        const response = await fetch("http://localhost:3000/users");
+        const response = await fetch("http://localhost:8080/users");
         const users = await response.json();
 
     let validUser = users.find(
@@ -112,7 +112,7 @@ async function addStudent(event) {
 
     try {
 
-        const result = await fetch("http://localhost:3000/students", {
+        const result = await fetch("http://localhost:8080/students", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -144,7 +144,7 @@ async function loadStudents() {
 
     const tableBody = document.getElementById("studentTableBody");
 
-    const response = await fetch("http://localhost:3000/students");
+    const response = await fetch("http://localhost:8080/students");
 
     const students = await response.json();
 
@@ -202,7 +202,7 @@ async function updateStudent(event) {
         cgpa: document.getElementById("cgpa").value
     };
 
-    await fetch(`http://localhost:3000/students/${id}`, {
+    await fetch(`http://localhost:8080/students/${id}`, {
 
         method: "PUT",
 
@@ -221,7 +221,7 @@ async function updateStudent(event) {
 // ================= DELETE STUDENT =================
 async function deleteStudent(id) {
 
-    await fetch(`http://localhost:3000/students/${id}`, {
+    await fetch(`http://localhost:8080/students/${id}`, {
         method: "DELETE"
     });
 
